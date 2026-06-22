@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { 
   Globe, 
   Sparkles, 
@@ -17,7 +17,8 @@ import {
   Share2,
   HeartPulse,
   Award,
-  Atom
+  Atom,
+  Download
 } from "lucide-react";
 import NetworkMesh from "./components/NetworkMesh";
 import LayerDetail from "./components/LayerDetail";
@@ -31,6 +32,45 @@ export default function App() {
   const [latencyBuffer, setLatencyBuffer] = useState<number>(0.8);
   const [noiseLevel, setNoiseLevel] = useState<number>(10);
   const [peerCount, setPeerCount] = useState<number>(2400);
+
+  // PWA custom event installation state
+  const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
+  const [isInstallable, setIsInstallable] = useState(true);
+
+  useEffect(() => {
+    const handler = (e: any) => {
+      e.preventDefault();
+      setDeferredPrompt(e);
+      setIsInstallable(true);
+    };
+    window.addEventListener("beforeinstallprompt", handler);
+
+    // If already in standalone display mode
+    if (window.matchMedia("(display-mode: standalone)").matches) {
+      setIsInstallable(false);
+    }
+
+    return () => {
+      window.removeEventListener("beforeinstallprompt", handler);
+    };
+  }, []);
+
+  const handleInstallClick = async () => {
+    if (!deferredPrompt) {
+      alert("📲 STANDALONE SECURE CLIENT INSTALLED!\n\nUntuk memasang langsung manual di Android/Chrome: klik tombol menu di pojok kanan atas browser lalu ketuk 'Install App' atau 'Tambahkan ke Layar Utama'.\nUntuk Safari iOS: tekan tombol 'Share' lalu ketuk 'Add to Home Screen'.");
+      return;
+    }
+    try {
+      deferredPrompt.prompt();
+      const { outcome } = await deferredPrompt.userChoice;
+      console.log(`PWA Installation Choice Outcome: ${outcome}`);
+      setDeferredPrompt(null);
+      setIsInstallable(false);
+    } catch (err) {
+      console.warn("PWA install error:", err);
+    }
+  };
+
 
   // Mapping layer index to Lucide Icons for flow chart
   const getFlowIcon = (id: number, className: string) => {
@@ -72,21 +112,28 @@ export default function App() {
 
         <div className="max-w-7xl mx-auto flex flex-col xl:flex-row items-center justify-between gap-6">
           
-          {/* Top Left: Holy Crest Icon and Brand Title */}
+          {/* Top Left: Holy Crest Icon with Our Cyberpunk Logo and Brand Title */}
           <div className="flex items-center gap-4">
-            <div className="h-14 w-14 rounded-full bg-slate-900 border border-gold-400 flex items-center justify-center text-gold-400 shadow-[0_0_15px_rgba(227,165,19,0.3)] animate-float-slow shrink-0">
-              <Atom className="h-9 w-9 text-gold-400 animate-spin" style={{ animationDuration: '40s' }} />
+            <div className="h-16 w-16 rounded-full bg-slate-900 border-2 border-cyan-400 flex items-center justify-center shadow-[0_0_20px_rgba(6,182,212,0.6)] shrink-0 overflow-hidden relative group animate-pulse" style={{ animationDuration: '3s' }}>
+              <img 
+                src="/src/assets/images/neurosphere_logo_1782126680004.jpg" 
+                alt="NeuroSphere Corporate Cyberpunk Logo Profile" 
+                className="h-full w-full object-cover group-hover:scale-110 transition-transform duration-500"
+                referrerPolicy="no-referrer"
+              />
+              <div className="absolute inset-0 bg-gradient-to-tr from-cyan-500/20 via-transparent to-pink-500 pointer-events-none"></div>
             </div>
             
             <div className="text-center xl:text-left">
-              <div className="flex items-center justify-center xl:justify-start gap-1 font-mono text-[9px] font-bold text-gold-500 tracking-[0.25em] uppercase">
-                <span className="inline-block h-1 w-4 bg-gold-500"></span> THE UNIVERSE <span className="inline-block h-1 w-4 bg-gold-500"></span>
+              <div className="flex items-center justify-center xl:justify-start gap-1 font-mono text-[9px] font-bold text-cyan-400 tracking-[0.25em] uppercase">
+                <span className="inline-block h-[2px] w-4 bg-cyan-400 animate-pulse"></span> NEUROSPHERE SOVEREIGN <span className="inline-block h-[2px] w-4 bg-cyan-400 animate-pulse"></span>
               </div>
-              <h1 className="font-display font-black text-2xl lg:text-3.5xl tracking-tight text-white glow-header-active mt-0.5">
-                NEUROSPHERE
+              <h1 className="font-display font-black text-2xl lg:text-3.5xl tracking-tight text-white glow-header-active mt-0.5 uppercase">
+                NEUROSPHERE STREAMING
               </h1>
-              <p className="font-display font-medium text-[11px] lg:text-xs text-gold-400 tracking-widest uppercase mt-0.5 sm:block">
-                DIGITAL SOVEREIGNTY UNIVERSITY &amp; STREAM GRID
+              <p className="font-display font-black text-[12px] text-pink-400 tracking-widest uppercase mt-0.5 flex items-center justify-center xl:justify-start gap-1">
+                <span className="h-2 w-2 rounded-full bg-pink-500 animate-ping"></span>
+                FREE € 100.000 FOR ADOPTERS
               </p>
             </div>
           </div>
@@ -117,21 +164,41 @@ export default function App() {
 
           </div>
 
-          {/* Top Right: Omnipresent Authority and Core Power Card (Matches Picture 1) */}
-          <div className="hidden lg:flex flex-col items-end text-right font-mono text-[10px] border-l border-slate-800/80 pl-6 shrink-0">
-            <div>
-              <span className="text-gold-400 font-bold">OMNI-AUTHORITY:</span> Master Architect of
+          {/* Top Right: Omnipresent Authority, Core Power Card and Live 1-Click PWA Installer */}
+          <div className="flex flex-col sm:flex-row items-center gap-4 border-l border-slate-800/80 pl-0 xl:pl-6 shrink-0 w-full xl:w-auto justify-end">
+            
+            {/* Custom 1-Click PWA installer with highly active gradient border and particle animations */}
+            <button
+              onClick={handleInstallClick}
+              className="w-full sm:w-auto px-5 py-3 text-xs font-mono font-black uppercase tracking-widest text-[#01102e] rounded-xl shadow-[0_0_25px_rgba(236,72,153,0.45)] cursor-pointer bg-gradient-to-r from-yellow-405 via-pink-505 to-cyan-505 bg-gradient-to-r from-yellow-400 via-pink-500 to-cyan-400 border-2 border-white/30 animate-pulse transition-all hover:scale-105 active:scale-95 duration-200 relative overflow-hidden group shrink-0"
+              title="Click to instantly install NeuroSphere Standalone Secure App on your Home Screen!"
+            >
+              <div className="absolute inset-0 bg-white/20 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000 pointer-events-none"></div>
+              <span className="flex items-center justify-center gap-2">
+                <span className="relative flex h-2.5 w-2.5">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-slate-900 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-slate-950"></span>
+                </span>
+                <span>INSTALL PWA (1-KLIK)</span>
+              </span>
+            </button>
+
+            <div className="hidden lg:flex flex-col items-end text-right font-mono text-[10px] shrink-0">
+              <div>
+                <span className="text-gold-400 font-bold">OMNI-AUTHORITY:</span> Master Architect of
+              </div>
+              <div className="text-white font-display text-[11px] font-semibold tracking-wider uppercase mt-0.5">
+                KINDNESS CIVILIZATION
+              </div>
+              <div className="text-gold-300 font-bold tracking-widest mt-1">
+                INDIE-Founder E J H N
+              </div>
+              <div className="text-[9px] text-slate-500 mt-1 flex items-center gap-1.5 justify-end">
+                <ShieldCheck className="h-3.5 w-3.5 text-emerald-400" />
+                Sovereign Grid Power Verified
+              </div>
             </div>
-            <div className="text-white font-display text-[11px] font-semibold tracking-wider uppercase mt-0.5">
-              KINDNESS CIVILIZATION
-            </div>
-            <div className="text-gold-300 font-bold tracking-widest mt-1">
-              INDIE-Founder E J H N
-            </div>
-            <div className="text-[9px] text-slate-500 mt-1 flex items-center gap-1.5">
-              <ShieldCheck className="h-3.5 w-3.5 text-emerald-400" />
-              Sovereign Grid Power Verified
-            </div>
+
           </div>
 
         </div>

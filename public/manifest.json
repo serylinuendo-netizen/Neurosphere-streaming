@@ -1,0 +1,24 @@
+{
+  "short_name": "NeuroSphere",
+  "name": "NeuroSphere Streaming Free €100.000",
+  "description": "Interactive autonomous blueprint representing the fully distributed, sovereign E2E Sphere Streaming Architecture.",
+  "id": "/",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#01040f",
+  "theme_color": "#01040f",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/src/assets/images/neurosphere_logo_1782126680004.jpg",
+      "sizes": "512x512",
+      "type": "image/jpeg",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/src/assets/images/neurosphere_logo_1782126680004.jpg",
+      "sizes": "192x192",
+      "type": "image/jpeg"
+    }
+  ]
+}
