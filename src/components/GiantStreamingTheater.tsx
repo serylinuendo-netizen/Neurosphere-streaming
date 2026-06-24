@@ -158,14 +158,39 @@ export default function GiantStreamingTheater() {
   // TTS Voice generator with female filter priority
   const speakNarratorPhrase = (phrase: string) => {
     if (isAudioMutedRef.current) return;
-    if (typeof window === "undefined" || !window.speechSynthesis) return;
+    if (typeof window === "undefined") return;
 
     try {
-      window.speechSynthesis.cancel(); // kill overlapping speech
-      const utterance = new SpeechSynthesisUtterance(phrase);
+      // Safely check if window.speechSynthesis exists to avoid sandboxing SecurityErrors
+      let synth: SpeechSynthesis | null = null;
+      try {
+        synth = window.speechSynthesis;
+      } catch (err) {
+        console.warn("speechSynthesis access blocked:", err);
+      }
+
+      if (!synth || typeof window.SpeechSynthesisUtterance === "undefined") {
+        setShowVocalStatus("Speech API Unavailable inside iframe restrictions, running on-screen visual audio waves.");
+        return;
+      }
+
+      try {
+        synth.cancel(); // kill overlapping speech
+      } catch (err) {
+        console.warn("speechSynthesis.cancel failed:", err);
+      }
+
+      const SpeechUtteranceClass = window.SpeechSynthesisUtterance;
+      const utterance = new SpeechUtteranceClass(phrase);
       
       // Try to find a nice English female narrator voice
-      const voices = window.speechSynthesis.getVoices();
+      let voices: SpeechSynthesisVoice[] = [];
+      try {
+        voices = synth.getVoices() || [];
+      } catch (err) {
+        console.warn("speechSynthesis.getVoices failed:", err);
+      }
+
       const englishFemaleVoice = voices.find(v => 
         (v.lang.startsWith("en-") || v.lang.startsWith("en_")) && 
         (v.name.toLowerCase().includes("female") || 
@@ -187,8 +212,14 @@ export default function GiantStreamingTheater() {
 
       utterance.rate = 1.05; // clear natural narration speed
       utterance.pitch = 1.1; // soft elegant narrator tone
-      window.speechSynthesis.speak(utterance);
-      setShowVocalStatus(`Voice Narration Synthesized: ${utterance.voice ? utterance.voice.name : "Default Eng"}`);
+
+      try {
+        synth.speak(utterance);
+        setShowVocalStatus(`Voice Narration Synthesized: ${utterance.voice ? utterance.voice.name : "Default Eng"}`);
+      } catch (err) {
+        console.warn("speechSynthesis.speak failed:", err);
+        setShowVocalStatus("Speech synthesis block detected, playing ambient visual audio waves.");
+      }
     } catch (e) {
       console.warn("SpeechSynthesis error:", e);
       setShowVocalStatus("Speech API Unavailable inside iframe restrictions, running on-screen visual audio waves.");
@@ -197,8 +228,15 @@ export default function GiantStreamingTheater() {
 
   // Keep Speech voices loaded
   useEffect(() => {
-    if (typeof window !== "undefined" && window.speechSynthesis) {
-      window.speechSynthesis.getVoices();
+    if (typeof window !== "undefined") {
+      try {
+        const synth = window.speechSynthesis;
+        if (synth && typeof synth.getVoices === "function") {
+          synth.getVoices();
+        }
+      } catch (err) {
+        console.warn("speechSynthesis.getVoices load warning:", err);
+      }
     }
   }, []);
 

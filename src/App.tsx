@@ -36,6 +36,42 @@ export default function App() {
   // PWA custom event installation state
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
   const [isInstallable, setIsInstallable] = useState(true);
+  const [securityAlert, setSecurityAlert] = useState<string | null>(null);
+
+  useEffect(() => {
+    const handleContextMenu = (e: MouseEvent) => {
+      e.preventDefault();
+      setSecurityAlert("🛡️ CRYPTO-SHIELD ACTIVE: Right-Click and Inspection Blocked to Prevent Reverse Engineering.");
+      setTimeout(() => setSecurityAlert(null), 3000);
+    };
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Block F12
+      if (e.key === "F12") {
+        e.preventDefault();
+        setSecurityAlert("🛡️ CRYPTO-SHIELD: DevTools shortcut (F12) blocked.");
+        setTimeout(() => setSecurityAlert(null), 3000);
+      }
+      // Block Ctrl+Shift+I, Ctrl+Shift+J, Ctrl+Shift+C, Ctrl+U
+      if (
+        (e.ctrlKey && e.shiftKey && (e.key === "I" || e.key === "J" || e.key === "C" || e.key === "i" || e.key === "j" || e.key === "c")) ||
+        (e.ctrlKey && (e.key === "U" || e.key === "u")) ||
+        (e.metaKey && e.altKey && (e.key === "I" || e.key === "J" || e.key === "C" || e.key === "i" || e.key === "j" || e.key === "c"))
+      ) {
+        e.preventDefault();
+        setSecurityAlert("🛡️ CRYPTO-SHIELD: Source inspection shortcut blocked.");
+        setTimeout(() => setSecurityAlert(null), 3000);
+      }
+    };
+
+    window.addEventListener("contextmenu", handleContextMenu);
+    window.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      window.removeEventListener("contextmenu", handleContextMenu);
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, []);
 
   useEffect(() => {
     const handler = (e: any) => {
@@ -46,8 +82,12 @@ export default function App() {
     window.addEventListener("beforeinstallprompt", handler);
 
     // If already in standalone display mode
-    if (window.matchMedia("(display-mode: standalone)").matches) {
-      setIsInstallable(false);
+    try {
+      if (window.matchMedia && window.matchMedia("(display-mode: standalone)").matches) {
+        setIsInstallable(false);
+      }
+    } catch (err) {
+      console.warn("matchMedia standalone error:", err);
     }
 
     return () => {
@@ -116,7 +156,7 @@ export default function App() {
           <div className="flex items-center gap-4">
             <div className="h-16 w-16 rounded-full bg-slate-900 border-2 border-cyan-400 flex items-center justify-center shadow-[0_0_20px_rgba(6,182,212,0.6)] shrink-0 overflow-hidden relative group animate-pulse" style={{ animationDuration: '3s' }}>
               <img 
-                src="/src/assets/images/neurosphere_logo_1782126680004.jpg" 
+                src="/neurosphere_logo_1782126680004.jpg" 
                 alt="NeuroSphere Corporate Cyberpunk Logo Profile" 
                 className="h-full w-full object-cover group-hover:scale-110 transition-transform duration-500"
                 referrerPolicy="no-referrer"
@@ -167,10 +207,10 @@ export default function App() {
           {/* Top Right: Omnipresent Authority, Core Power Card and Live 1-Click PWA Installer */}
           <div className="flex flex-col sm:flex-row items-center gap-4 border-l border-slate-800/80 pl-0 xl:pl-6 shrink-0 w-full xl:w-auto justify-end">
             
-            {/* Custom 1-Click PWA installer with highly active gradient border and particle animations */}
+             {/* Custom 1-Click PWA installer with highly active gradient border and particle animations */}
             <button
               onClick={handleInstallClick}
-              className="w-full sm:w-auto px-5 py-3 text-xs font-mono font-black uppercase tracking-widest text-[#01102e] rounded-xl shadow-[0_0_25px_rgba(236,72,153,0.45)] cursor-pointer bg-gradient-to-r from-yellow-405 via-pink-505 to-cyan-505 bg-gradient-to-r from-yellow-400 via-pink-500 to-cyan-400 border-2 border-white/30 animate-pulse transition-all hover:scale-105 active:scale-95 duration-200 relative overflow-hidden group shrink-0"
+              className="w-full sm:w-auto px-5 py-3 text-xs font-mono font-black uppercase tracking-widest text-slate-950 rounded-xl cursor-pointer bg-gradient-to-r from-yellow-400 via-pink-500 to-cyan-400 animate-gradient-move animate-neon-border-glow border-2 border-transparent transition-all hover:scale-105 active:scale-95 duration-200 relative overflow-hidden group shrink-0"
               title="Click to instantly install NeuroSphere Standalone Secure App on your Home Screen!"
             >
               <div className="absolute inset-0 bg-white/20 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000 pointer-events-none"></div>
@@ -381,6 +421,13 @@ export default function App() {
 
         </div>
       </footer>
+
+      {securityAlert && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-slate-950 border-2 border-pink-500 text-pink-400 px-6 py-3.5 rounded-xl shadow-[0_0_30px_rgba(236,72,153,0.5)] font-mono text-xs flex items-center gap-3 animate-bounce">
+          <span className="h-2 w-2 rounded-full bg-pink-500 animate-ping"></span>
+          <span className="font-bold tracking-wide">{securityAlert}</span>
+        </div>
+      )}
     </div>
   );
 }

@@ -5,23 +5,37 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>NeuroSphere Streaming Free €100.000</title>
     <!-- PWA Settings -->
-    <link rel="manifest" href="/public/manifest.json" />
+    <link rel="manifest" href="/manifest.json" />
     <meta name="theme-color" content="#01040f" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-title" content="NeuroSphere" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-    <link rel="apple-touch-icon" href="/src/assets/images/neurosphere_logo_1782126680004.jpg" />
+    <link rel="apple-touch-icon" href="/neurosphere_logo_1782126680004.jpg" />
   </head>
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
     <script>
-      if ('serviceWorker' in navigator) {
-        window.addEventListener('load', () => {
-          navigator.serviceWorker.register('/public/sw.js')
-            .then(reg => console.log('Service Worker registered successfully!', reg))
-            .catch(err => console.log('Service Worker registration failed:', err));
-        });
+      try {
+        let isTop = false;
+        try {
+          isTop = (window.self === window.top);
+        } catch (e) {
+          isTop = false;
+        }
+        if (isTop && 'serviceWorker' in navigator) {
+          window.addEventListener('load', () => {
+            try {
+              navigator.serviceWorker.register('/sw.js')
+                .then(reg => console.log('Service Worker registered successfully!', reg))
+                .catch(err => console.warn('Service Worker registration failed:', err));
+            } catch (err) {
+              console.warn('Service Worker registration blocked or failed:', err);
+            }
+          });
+        }
+      } catch (err) {
+        console.warn('Service Worker check blocked or failed:', err);
       }
     </script>
   </body>

@@ -3,9 +3,8 @@ const CACHE_NAME = "neurosphere-cache-v1";
 const ASSETS = [
   "/",
   "/index.html",
-  "/src/main.tsx",
-  "/src/App.tsx",
-  "/public/manifest.json"
+  "/manifest.json",
+  "/neurosphere_logo_1782126680004.jpg"
 ];
 
 self.addEventListener("install", (e) => {
@@ -36,6 +35,10 @@ self.addEventListener("activate", (e) => {
 });
 
 self.addEventListener("fetch", (e) => {
+  // Skip non-HTTP/HTTPS schemes (e.g. chrome-extension, ws, etc.)
+  if (!e.request.url.startsWith("http")) {
+    return;
+  }
   // Let it pass through to server API or load from caches when offline
   e.respondWith(
     fetch(e.request).catch(() => {
